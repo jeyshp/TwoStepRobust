@@ -1,16 +1,29 @@
+#' 
+#' 
+#' @description generateData() produces contaminated training data and uncontaminated test data 
+#' 
+#' @param N Number of training sets 
+#' @param n Sample size for training set
+#' @param m Sample size for test set
+#' @param p Total number of parameters
+#' @param rho Correlation within a block of active parameters
+#' @param rho.inactive Correlation between blocks of active parameters
+#' @param p.active Number of active parameters
+#' @param group.size Size of one block of active parameters
+#' @param snr Signal to noise ratio
+#' @param contamination.prop Contamination proportion
 
-#generateData() produces a training data set and a test data set
 
-generateData <- function(N, #number of training sets
-                         n, #sample size for training set
-                         m, #sample size for test set
-                         p, #number of peters
-                         rho, #correlation within a block of peters
-                         rho.inactive, #correlation between blocks 
-                         p.active, #number of active peters
-                         group.size, #size of one block
+generateData <- function(N, 
+                         n, 
+                         m, 
+                         p, 
+                         rho, 
+                         rho.inactive, 
+                         p.active, 
+                         group.size, 
                          snr, 
-                         contamination.prop){  #contamination proportion
+                         contamination.prop){ 
                          
   xlist <- list()
   ylist <-list()
@@ -18,6 +31,7 @@ generateData <- function(N, #number of training sets
   k_lev <- 2
   k_slo <- 100
   
+  #Setting up correlation between and within blocks of active parameters
   sigma.mat <- matrix(0, nrow = p, ncol = p)
   sigma.mat[1:p.active, 1:p.active] <- rho.inactive
   for(group in 0:(p.active/group.size - 1))
@@ -26,7 +40,7 @@ generateData <- function(N, #number of training sets
   
   trueBeta <- c(runif(p.active, 0, 5)*(-1)^rbinom(p.active, 1, 0.7), rep(0, p - p.active))
   
-  #contamination of trueBeta
+  #Contamination of trueBeta
   contamination_indices <- 1:floor(n*contamination.prop)
   beta_cont <- trueBeta
   beta_cont[trueBeta!=0] <- beta_cont[trueBeta!=0]*(1 + k_slo)
@@ -34,7 +48,7 @@ generateData <- function(N, #number of training sets
   
   sigma <- as.numeric(sqrt(t(trueBeta) %*% sigma.mat %*% trueBeta)/sqrt(snr))
   
-  #training data + contamination
+  #Simulating and contamination of training data
   for(i in 1:N) {
 
     x_train <- mvnfast::rmvn(n, mu = rep(0, p), sigma = sigma.mat)
@@ -54,7 +68,7 @@ generateData <- function(N, #number of training sets
 
   }
   
- #test data 
+ #Simulating uncontaminated test data 
   x_test <- mvnfast::rmvn(m, mu = rep(0, p), sigma = sigma.mat)
   y_test <- x_test %*% trueBeta + rnorm(m, 0, sigma)
   
