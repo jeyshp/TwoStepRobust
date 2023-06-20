@@ -47,7 +47,7 @@ generatePred <- function(simdata,n_models, ...) {
     pred_output["Pense", "RC", i] <- RC_PR(coef_pense, simdata$active_ind)$rc
     pred_output["Pense", "PR", i] <- RC_PR(coef_pense, simdata$active_ind)$pr
     
-    lambda_grid <- lambda0(simdata$training_data$xtrain[[i]], simdata$training_data$ytrain[[i]])
+    lambda_grid <- robustHD::lambda0(simdata$training_data$xtrain[[i]], simdata$training_data$ytrain[[i]])
     sparseLTS_output <- robustHD::sparseLTS(x = simdata$training_data$xtrain[[i]], 
                                             y = simdata$training_data$ytrain[[i]], 
                                             lambda =lambda_grid)
