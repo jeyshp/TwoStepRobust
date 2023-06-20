@@ -1,5 +1,7 @@
 
-#RC_PR checks and returns the recall and precision of an estimator
+#' @description RC_PR checks for non-zero coefficients and returns the recall and precision of an estimator
+#' @param coef_vector Vector of coefficients
+#' @param active_preds Number of active predictors
 
 RC_PR <- function(coef_vector,
                  active_preds){
