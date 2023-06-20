@@ -1,5 +1,22 @@
+
+#' @description Simulation example 
+#' 
+#' @param N Number of training sets 
+#' @param n Sample size for training set
+#' @param m Sample size for test set
+#' @param p Total number of parameters
+#' @param rho Correlation within a block of active parameters
+#' @param rho.inactive Correlation between blocks of active parameters
+#' @param p.active Number of active parameters
+#' @param group.size Size of one block of active parameters
+#' @param snr Signal to noise ratio
+#' @param contamination.prop Contamination proportion
+#' @param n_models Number of models for ensemble 
+
+
 rm(list = ls())
-#setting fixed arguments for training set, sample size and number of parameters
+
+#Setting values for size of training set, sample size and total number of parameters
 N <- 2
 n <- 25
 p <- 50
@@ -9,6 +26,7 @@ n_models = 2
 
 source("generateOutput.R")
 
+#For loops for varying values of snr and rho 
 for(snr_val in snr){
   for(rho_val in rho) {
     filename = paste0("results/results_n=",n,"_p=",p,"_snr=",snr_val,"_rho= ",rho_val,".Rdata")
@@ -19,7 +37,14 @@ for(snr_val in snr){
   }
 }
 
-
+#' @description get_specific() returns the  output for MSPE, RC and PR for all models for a specific p.active ad contamination proportion 
+#' 
+#' @param result Output from generateOutput()
+#' @param p.active Number of active predictors to check for 
+#' @param p.active_vec List of active predictors fed to generateOutput()
+#' @param contamination.prop Contamination proportion to check for 
+#' @param contamination.prop_vec List of contamination proportion to check for 
+#' 
 get_specific <- function(result,
                          p.active,contamination.prop,
                          p.active_vec,
@@ -31,6 +56,4 @@ get_specific <- function(result,
   
 }
 
-get_specific(result, rho = 0.5, p.active = 10,snr = 3,contamination.prop = 0.3,
-             rho_vec = c(0.5,0.8,0.9), p.active_vec = c(5,10), snr_vec = c(3,4), contamination.prop_vec = c(0.2,0.3))
 
