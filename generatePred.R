@@ -1,18 +1,28 @@
 
-#generatePred() fits a model using PENSE and sparseLTS and stores the MSPE,specificity and sensitivity of each training set for each model
+#' @description generatePred() fits models using Elastic Net(glmnet), Penalized Elastic Net S-estimator (pense), 
+#' Sparse least trimmed squares regression (robustHD), Robust Stepwise Split Regression (robStepSplitReg),
+#' Robust Stepwise Split Regression with an ensemble and Huber Loss Regression(hqreg) and stores the MSPE, recall and precision for each.
+#' 
+#' @param simdata Output from generateData() 
+#' @param n_models Number of models for ensemble 
+#' 
+
 
 source("RC_PR.R")
+
 generatePred <- function(simdata,n_models, ...) {
   
-  N = length(simdata$training_data$xtrain) #size of training dataset
-  p.active = simdata$pactive # number of active predictors
+  #Size of training data set
+  N = length(simdata$training_data$xtrain) 
+  #Number of active parameters
+  p.active = simdata$pactive 
+  #Sample size for one training set
   n = simdata$n
-  
-  #test data
+  #Test data
   xtestdata = simdata$testing_data$xtest 
   ytestdata = simdata$testing_data$ytest
   
-  
+  #Initialization of output array
   pred_output <- array(dim = c(6,3,N))
   colnames(pred_output) = c("MSPE","RC", "PR")
   rownames(pred_output) = c("EN", "Pense", "sparseLTS", "robStepSplitReg","Ensemble", "HuberEN")
