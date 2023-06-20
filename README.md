@@ -1,5 +1,5 @@
 # TwoStepRobust
-Simulations to test and compare the robStepSplitReg estimator's performance on high-dimensional contaminated data. 
+Simulations to test and compare the robust stepwise split regularized regression (robStepSplitReg) estimator's performance on contaminated high-dimensional data. 
 
 #### Required library
 ```
