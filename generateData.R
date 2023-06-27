@@ -75,7 +75,7 @@ generateData <- function(N,
 
  return(
    list(training_data = list(xtrain = xlist, ytrain = ylist), testing_data = list(xtest = x_test, ytest = y_test), 
-        pactive = p.active, n = n, sigma = sigma, active_ind = which(trueBeta != 0)))
+        pactive = p.active, n = n, sigma = sigma, active_ind = which(trueBeta != 0), p = p))
   
 }
 
