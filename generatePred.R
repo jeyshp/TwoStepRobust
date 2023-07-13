@@ -9,6 +9,7 @@
 #' 
 
 source("RC_PR.R")
+source("SparseShootingS/sparseShootingS.R")
 
 generatePred <- function(simdata,n_models, ...) {
   
@@ -31,9 +32,7 @@ generatePred <- function(simdata,n_models, ...) {
                             "Pense", "sparseLTS",
                             "robStepSplitReg","robStepSplitRegSelect", "srlars", "srlarsSelect","srlarsEnsemble", "srlarsEnsembleSelect",
                             "robStepSplitRegEnsemble", "robStepSplitRegEnsembleSelect", "HuberEN")
-  
-  
-  #add computing time for all 
+
   
   for(i in 1:N) {
     
@@ -55,6 +54,27 @@ generatePred <- function(simdata,n_models, ...) {
     })
     
     pred_output["ElasticNet",,i] <- en_final
+    
+    #SparseShootingS
+    
+    sparseshootingS_final <- tryCatch({
+      sparseS_cpu <- system.time(sparseS_output <- sparseshooting(x =  simdata$training_data$xtrain[[i]], y =  simdata$training_data$ytrain[[i]],  
+                                                                  wvalue = 3, nlambda = 100))
+      sparseS_preds <- sparseS_output$coef[1] + xtestdata %*% sparseS_output$coef[-1]
+      MSPE_sparseS <- mean((sparseS_preds -ytestdata)^2)/simdata$sigma^2
+      coef_sparseS <- sparseS_output$coef[-1]
+      RC_sparseS <- RC_PR(coef_sparseS, simdata$active_ind)$rc
+      PR_sparseS <- RC_PR(coef_sparseS, simdata$active_ind)$pr
+      CPU_sparseS <- sparseS_cpu["elapsed"]
+      
+      c(MSPE_sparseS, RC_sparseS, PR_sparseS, CPU_sparseS)
+      
+    }, error = function(e){
+      return(c(NA, NA, NA, NA))
+    })
+
+    
+    pred_output["sparseShooting",,i] <- sparseshootingS_final
     
   #DDC_ElasticNet
     

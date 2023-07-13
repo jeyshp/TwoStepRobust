@@ -13,7 +13,6 @@
 #' @param snr Signal to noise ratio
 #' @param contamination.prop Contamination proportion
 
-
 generateData <- function(N, 
                          n, 
                          m, 
@@ -53,20 +52,23 @@ generateData <- function(N,
 
     x_train <- mvnfast::rmvn(n, mu = rep(0, p), sigma = sigma.mat)
     y <- x_train %*% trueBeta + rnorm(n, 0, sigma)
-  
-    for(cont_id in contamination_indices){
-      
-      a <- runif(p, min = -1, max = 1)
-      a <- a - as.numeric((1/p)*t(a) %*% rep(1, p))
-      x_train[cont_id,] <- mvnfast::rmvn(1, rep(0, p), 0.1^2*diag(p)) + 
-        k_lev * a / as.numeric(sqrt(t(a) %*% solve(sigma.mat) %*% a))
-      y[cont_id] <- t(x_train[cont_id,]) %*% beta_cont
-    }
     
     xlist[[i]] <- x_train
     ylist[[i]] <- y
 
   }
+  
+  for(i in 1:N) {
+    for(cont_id in contamination_indices){
+      
+      a <- runif(p, min = -1, max = 1)
+      a <- a - as.numeric((1/p)*t(a) %*% rep(1, p))
+      xlist[[i]][cont_id,] <- mvnfast::rmvn(1, rep(0, p), 0.1^2*diag(p)) + 
+        k_lev * a / as.numeric(sqrt(t(a) %*% solve(sigma.mat) %*% a))
+      ylist[[i]][cont_id] <- t(xlist[[i]][cont_id,]) %*% beta_cont
+    }
+  }
+  
   
  #Simulating uncontaminated test data 
   x_test <- mvnfast::rmvn(m, mu = rep(0, p), sigma = sigma.mat)
@@ -75,7 +77,7 @@ generateData <- function(N,
 
  return(
    list(training_data = list(xtrain = xlist, ytrain = ylist), testing_data = list(xtest = x_test, ytest = y_test), 
-        pactive = p.active, n = n, sigma = sigma, active_ind = which(trueBeta != 0), p = p))
+        pactive = p.active, n = n, sigma = sigma, active_ind = which(trueBeta != 0), p = p, trueBeta = trueBeta))
   
 }
 
