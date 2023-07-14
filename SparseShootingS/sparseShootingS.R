@@ -1,9 +1,6 @@
 # Source: https://github.com/ineswilms/sparse-shooting-S
 # Authors: Lea Bottmer, Christophe Croux, Ines 
 
-# Required library
-library(pcaPP)
-
 # Source CPP code
 Rcpp::sourceCpp("SparseShootingS/sparseShootingS.cpp")
 
@@ -237,7 +234,7 @@ shooting <- function(x, y, k = 3.420, maxIteration = 100, tol = 10^-2,
 
 robcorr <- function(X, Y){
   # Kendall's correlations
-  robcor <- apply(X, 2, cor.fk, y=Y)
+  robcor <- apply(X, 2, pcaPP::cor.fk, y=Y)
   predcor <- order(abs(robcor), decreasing = T)
   
   out <- list("robcor" = robcor, "predcor" = predcor)
@@ -246,7 +243,7 @@ robcorr <- function(X, Y){
 Xestimfast <- function(Xmatrix, value = 3){ 
   # Function to obtain xhat
   
-  cork <- abs(cor.fk(Xmatrix))
+  cork <- abs(pcaPP::cor.fk(Xmatrix))
   diag(cork) <- 0
   cormax <- apply(cork, 2, which.max)
   
@@ -309,7 +306,7 @@ get_lambda_max <- function(xtilde, y, ytilde, x, xhat, betaEst, intercept, scale
   # value: cut-off value for outlier flagging  
   
   # Robust correlations
-  cork <- apply(xtilde, 2, cor.fk, y = y)
+  cork <- apply(xtilde, 2, pcaPP::cor.fk, y = y)
   max <- which.max(abs(cork))
   lambda_init <- 30*abs(cork[max])
   n <- nrow(x)
