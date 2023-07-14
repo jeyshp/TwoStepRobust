@@ -13,10 +13,6 @@
 #' @param n_models Number of models for ensemble.
 #' @param contamination.scenario Casewise, cellwise marginal or cellwise correlation contamination.
 
-# Required libraries
-library(parallel)
-library(foreach)
-
 # Required source file
 source("simfunc.R")
 
@@ -39,9 +35,10 @@ generateOutput <- function (N,
   
   # Initializing number of cores used 
   if (length(p.active)*length(contamination.prop) != 1) 
-    n_clusters <-  min(length(p.active)*length(contamination.prop),detectCores()-1) else
+    n_clusters <-  min(length(p.active)*length(contamination.prop), detectCores()-1) else
       n_clusters <- 2
   mycluster <- makeCluster(n_clusters)
+  registerDoSNOW(mycluster)
   
   #Parallel computation of simfunc() for different values of p.active and contamination proportion 
   results <- foreach(mycontprop = contamination.prop, .packages = c("mvnfast",
