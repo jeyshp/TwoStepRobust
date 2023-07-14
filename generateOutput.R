@@ -15,7 +15,7 @@
 
 # Required libraries
 library("parallel")
-library("doSNOW")
+library("foreach")
 
 # Required source file
 source("simfunc.R")
