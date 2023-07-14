@@ -1,50 +1,50 @@
-
-#' @description Simulation example 
+#'
+#' @description Simulation example.
 #' 
-#' @param N Number of training sets 
-#' @param n Sample size for training set
-#' @param m Sample size for test set
-#' @param p Total number of parameters
-#' @param rho Correlation within a block of active parameters
-#' @param rho.inactive Correlation between blocks of active parameters
-#' @param p.active Number of active parameters
-#' @param group.size Size of one block of active parameters
-#' @param snr Signal to noise ratio
-#' @param contamination.prop Contamination proportion
-#' @param n_models Number of models for ensemble 
-#' @param contamination.scenario Casewise, Cellwise Marginal or Cellwise Correlation Contamination
+#' @param N Number of training sets.
+#' @param n Sample size for training set.
+#' @param m Sample size for test set.
+#' @param p Total number of parameters.
+#' @param rho Correlation within a block of active parameters.
+#' @param rho.inactive Correlation between blocks of active parameters.
+#' @param p.active Number of active parameters.
+#' @param group.size Size of one block of active parameters.
+#' @param snr Signal to noise ratio.
+#' @param contamination.prop Contamination proportion.
+#' @param n_models Number of models for ensemble.
+#' @param contamination.scenario Casewise, cellwise marginal or cellwise correlation contamination.
 
-
+# Clear all memory
 rm(list = ls())
 
-#Setting values for size of training set, sample size and total number of parameters
+# Setting values for size of training set, sample size and total number of parameters
 N <- 50
 n <- 50
 p <- 500
 contamination_scenario <- c("casewise", "cellwise_marginal", "cellwise_correlation")
-snr = c(0.5,1,2)
-rho = c(0.5,0.8)
-n_models = 2
-p.active = c(50, 100, 200)
+snr <- c(0.5, 1, 2)
+rho <- c(0.5, 0.8)
+n_models <- 2
+p.active <- c(50, 100, 200)
 
+# Required source file
 source("generateOutput.R")
 
-#For loops for varying values of snr and rho a 
+# For loops for varying values of snr and rho a 
 for(scenario_val in contamination_scenario) {
   
   if(scenario_val == "casewise") 
-    contamination.prop = seq(0,0.4, by = 0.1) else 
-      contamination.prop = c(0.1, 0.2)
+    contamination.prop <- seq(0, 0.4, by = 0.1) else 
+      contamination.prop <- seq(0, 0.2, by = 0.1)
     
   for(snr_val in snr){
     for(rho_val in rho) {
-      filename = paste0("results/results_n=",n,"_p=",p,"_scenario=", scenario_val, "_snr=",snr_val,"_rho= ",rho_val,".Rdata")
+      filename <- paste0("results/results_n=",n,"_p=",p,"_scenario=", scenario_val, "_snr=",snr_val,"_rho= ",rho_val,".Rdata")
       result <- generateOutput(N=N, n=n, m= 2e5, p=p, rho=rho_val, rho.inactive = 0.2,
                                p.active = p.active, group.size= 2, snr = snr_val , 
                                contamination.prop = contamination.prop, contamination.scenario = scenario_val,
                                seed = 0, n_models = n_models)
       save.image(filename)
-    
     }
   }
 }
@@ -62,10 +62,7 @@ get_specific <- function(result,
                          p.active_vec,
                          contamination.prop_vec){
   
-  return (
-    result[[which(p.active == p.active_vec)]][[which(contamination.prop == contamination.prop_vec)]]
-    )
-  
+  return(result[[which(p.active == p.active_vec)]][[which(contamination.prop == contamination.prop_vec)]])
 }
 
 
