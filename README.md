@@ -11,10 +11,9 @@ install.packages("robustHD")
 install.packages("robStepSplitReg")
 install.packages("hqreg")
 install.packages("glmnet")
-install.packages(pcaPP) 
-install.packages(robustbase) 
+install.packages("pcaPP") 
+install.packages("robustbase") 
 ```
-
 
 #### Simulation Parameters
 
@@ -28,6 +27,8 @@ rho <- c(0.5, 0.8)
 n_models <- 2
 p.active <- c(50, 100, 200)
 ```
+
+#### Loading Source Files
 
 `source("generateOutput.R")`
 
