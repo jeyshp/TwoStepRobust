@@ -5,7 +5,7 @@ Simulations scripts for fast and scalable cellwise robust ensembles for high-dim
 ```
 install.packages("mvnfast")
 install.packages("parallel")
-install.packages("doSNOW")
+install.packages("foreach")
 install.packages("pense")
 install.packages("robustHD")
 install.packages("robStepSplitReg")
