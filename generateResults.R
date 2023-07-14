@@ -12,28 +12,40 @@
 #' @param snr Signal to noise ratio
 #' @param contamination.prop Contamination proportion
 #' @param n_models Number of models for ensemble 
+#' @param contamination.scenario Casewise, Cellwise Marginal or Cellwise Correlation Contamination
 
 
 rm(list = ls())
 
 #Setting values for size of training set, sample size and total number of parameters
-N <- 2
-n <- 25
-p <- 50
+N <- 50
+n <- 50
+p <- 500
+contamination_scenario <- c("casewise", "cellwise_marginal", "cellwise_correlation")
 snr = c(0.5,1,2)
 rho = c(0.5,0.8)
 n_models = 2
+p.active = c(50, 100, 200)
 
 source("generateOutput.R")
 
-#For loops for varying values of snr and rho 
-for(snr_val in snr){
-  for(rho_val in rho) {
-    filename = paste0("results/results_n=",n,"_p=",p,"_snr=",snr_val,"_rho= ",rho_val,".Rdata")
-    result <- generateOutput(N=N, n=n, m= 2e5, p=p, rho=rho_val, rho.inactive = 0.2,
-                             p.active = c(5,10), group.size= 2, snr = snr_val , contamination.prop = c(0.2,0.3), seed = 1464, n_models = n_models)
-    save.image(filename)
+#For loops for varying values of snr and rho a 
+for(scenario_val in contamination_scenario) {
   
+  if(scenario_val == "casewise") 
+    contamination.prop = seq(0,0.4, by = 0.1) else 
+      contamination.prop = c(0.1, 0.2)
+    
+  for(snr_val in snr){
+    for(rho_val in rho) {
+      filename = paste0("results/results_n=",n,"_p=",p,"_scenario=", scenario_val, "_snr=",snr_val,"_rho= ",rho_val,".Rdata")
+      result <- generateOutput(N=N, n=n, m= 2e5, p=p, rho=rho_val, rho.inactive = 0.2,
+                               p.active = p.active, group.size= 2, snr = snr_val , 
+                               contamination.prop = contamination.prop, contamination.scenario = scenario_val,
+                               seed = 0, n_models = n_models)
+      save.image(filename)
+    
+    }
   }
 }
 

@@ -11,6 +11,7 @@
 #' @param snr Signal to noise ratio
 #' @param contamination.prop Contamination proportion
 #' @param n_models Number of models for ensemble 
+#' @param contamination.scenario Casewise, Cellwise Marginal or Cellwise Correlation Contamination 
 
 #Required libraries
 library("parallel")
@@ -28,6 +29,7 @@ generateOutput <- function (N,
                             group.size,
                             snr, 
                             contamination.prop, 
+                            contamination.scenario,
                             seed = 0,
                             n_models,
                             ...){
@@ -46,7 +48,8 @@ generateOutput <- function (N,
   results = foreach(mycontprop = contamination.prop, .packages = c("pense","robustHD","mvnfast","robStepSplitReg","hqreg","glmnet")) %:%
     foreach(mypactive = p.active, .packages = c("pense","robustHD","mvnfast","robStepSplitReg","hqreg","glmnet")) %dopar% {
       output = simfunc(N = N, n=n, m=m, p=p, rho = rho, rho.inactive = rho.inactive, p.active = mypactive, 
-                       group.size = group.size, snr = snr, contamination.prop = mycontprop, n_models = n_models, ...)
+                       group.size = group.size, snr = snr, contamination.prop = mycontprop, contamination.scenario = contamination.scenario,
+                       n_models = n_models, ...)
     }
   
   stopCluster(mycluster)

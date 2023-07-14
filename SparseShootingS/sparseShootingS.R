@@ -1,7 +1,8 @@
 
 Rcpp::sourceCpp("SparseShootingS/sparseShootingS.cpp")
 
-
+library(pcaPP) 
+library(robustbase) 
 
 sparseshooting <- function(x, y, k = 3.420, maxIteration = 100, tol = 10^-2, 
                            betaEst = NULL, intercept = NULL, scaleVar = NULL, xhat = NULL, xtilde = NULL,

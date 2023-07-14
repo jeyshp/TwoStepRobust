@@ -11,6 +11,8 @@
 #' @param snr Signal to noise ratio
 #' @param contamination.prop Contamination proportion
 #' @param n_models Number of models for ensemble 
+#' @param contamination.scenario Casewise, Cellwise Marginal or Cellwise Correlation Contamination
+
 
 source("generateData.R")
 source("generatePred.R")
@@ -26,10 +28,11 @@ simfunc <- function(N,
                     group.size,
                     snr, 
                     contamination.prop,
+                    contamination.scenario,
                     n_models,
                     ...){ 
   
-  sim_Data <- generateData(N, n, m, parameters, rho, rho.inactive, p.active, group.size, snr, contamination.prop)
+  sim_Data <- generateData(N, n, m, parameters, rho, rho.inactive, p.active, group.size, snr, contamination.prop, contamination.scenario)
   output <- generatePred(sim_Data, n_models, ...)
   
   return(output)
