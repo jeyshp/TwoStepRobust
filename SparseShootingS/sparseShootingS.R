@@ -4,10 +4,6 @@
 # Source CPP code
 Rcpp::sourceCpp("SparseShootingS/sparseShootingS.cpp")
 
-# Required libraries
-library(pcaPP) 
-library(robustbase) 
-
 sparseshooting <- function(x, y, k = 3.420, maxIteration = 100, tol = 10^-2, 
                            betaEst = NULL, intercept = NULL, scaleVar = NULL, xhat = NULL, xtilde = NULL,
                            maxituniv = 1, maxitscale = 100, wvalue = 3, shoot_order = "default",
@@ -254,12 +250,12 @@ Xestimfast <- function(Xmatrix, value = 3){
   MMuniv <- function(U, indexmax, Xdata){
     i.variable <- which(apply(U==Xdata, 2, all)==T)
     i.pred <- indexmax[i.variable]
-    Xstand <- robStandardize(U)
+    Xstand <- robustHD::robStandardize(U)
     mx <- attr(Xstand, "center")
     sx <- attr(Xstand, "scale")
     
     # Univariate Robust Regression
-    fit <- suppressWarnings(lmrob(U ~ Xdata[, i.pred], setting = "KS2011"))
+    fit <- suppressWarnings(robustbase::lmrob(U ~ Xdata[, i.pred], setting = "KS2011"))
     rs <- fit$residuals/fit$scale
     Xstar <- fit$fitted.values # Fitted values
     xstars <- (Xstar - mx)/sx
@@ -278,7 +274,7 @@ Xinitftc <- function(U, Xmatrix, Xest, value = 3){
   i.variable <- which(apply(U==Xmatrix, 2, all)==T)
   
   # Check original observation with univariate outlier detection tool
-  xx <- robStandardize(U)
+  xx <- robustHD::robStandardize(U)
   mx <- attr(xx, "center")
   sx <- attr(xx, "scale")
   critvalue <- value*sx
@@ -436,7 +432,7 @@ startvalue_MM <- function(X, Y, value, robcor_fit = NULL, Xinit = NULL, predset 
   
   
   # MM-FIT
-  fitinit <- suppressWarnings(lmrob(Y~., data = cbind(Y, data.frame(Xinit[, predset])), setting = "KS2011"))
+  fitinit <- suppressWarnings(robustbase::lmrob(Y~., data = cbind(Y, data.frame(Xinit[, predset])), setting = "KS2011"))
   betaEst[predset] <- fitinit$coef[-1]
   intercept <- rep.int(fitinit$coef[1], p)
   scaleVar <- rep.int(fitinit$scale, p)
