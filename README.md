@@ -1,43 +1,55 @@
 # TwoStepRobust
-Simulations to test and compare the robust stepwise split regularized regression (robStepSplitReg) estimator's performance on contaminated high-dimensional data. 
+Simulations scripts for fast and scalable cellwise robust ensembles for high-dimensional data.
 
 #### Required library
 ```
-library("mvnfast")
-library("parallel")
-library("doSNOW")
-library("pense")
-library("robustHD")
-library("robStepSplitReg")
-library("hqreg")
-library("glmnet")
+install.packages("mvnfast")
+install.packages("parallel")
+install.packages("doSNOW")
+install.packages("pense")
+install.packages("robustHD")
+install.packages("robStepSplitReg")
+install.packages("hqreg")
+install.packages("glmnet")
+install.packages(pcaPP) 
+install.packages(robustbase) 
 ```
 
 
 #### Simulation Parameters
 
 ```
-N <- 2
-n <- 25
-p <- 50
-snr = c(0.5,1,2)
-rho = c(0.5,0.8)
-n_models = 2
+N <- 50
+n <- 50
+p <- 500
+contamination_scenario <- c("casewise", "cellwise_marginal", "cellwise_correlation")
+snr <- c(0.5, 1, 2)
+rho <- c(0.5, 0.8)
+n_models <- 2
+p.active <- c(50, 100, 200)
 ```
 
 `source("generateOutput.R")`
 
-#### Generating & saving results for one simulation 
+#### Generating Results
 
 ```
-for(snr_val in snr){
-  for(rho_val in rho) {
-    filename = paste0("results/results_n=",n,"_p=",p,"_snr=",snr_val,"_rho= ",rho_val,".Rdata")
-    result <- generateOutput(N=N, n=n, m= 2e5, p=p, rho=rho_val, rho.inactive = 0.2,
-                             p.active = c(5,10), group.size= 2, snr = snr_val , contamination.prop = c(0.2,0.3),
-                             seed = 1464, n_models = n_models)
-    save.image(filename)
+for(scenario_val in contamination_scenario) {
   
+  if(scenario_val == "casewise") 
+    contamination.prop = seq(0, 0.4, by = 0.1) else 
+      contamination.prop = c(0.1, 0.2)
+    
+  for(snr_val in snr){
+    for(rho_val in rho) {
+      filename = paste0("results/results_n=",n,"_p=",p,"_scenario=", scenario_val, "_snr=",snr_val,"_rho= ",rho_val,".Rdata")
+      result <- generateOutput(N=N, n=n, m= 2e5, p=p, rho=rho_val, rho.inactive = 0.2,
+                               p.active = p.active, group.size= 2, snr = snr_val , 
+                               contamination.prop = contamination.prop, contamination.scenario = scenario_val,
+                               seed = 0, n_models = n_models)
+      save.image(filename)
+    
+    }
   }
 }
 ```

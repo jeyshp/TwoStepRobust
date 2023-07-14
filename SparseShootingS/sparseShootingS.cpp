@@ -1,3 +1,6 @@
+// Source: https://github.com/ineswilms/sparse-shooting-S
+// Authors: Lea Bottmer, Christophe Croux, Ines Wilms
+
 #include <RcppArmadillo.h>
 
 // [[Rcpp::plugins(cpp11)]]
