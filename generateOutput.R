@@ -14,8 +14,8 @@
 #' @param contamination.scenario Casewise, cellwise marginal or cellwise correlation contamination.
 
 # Required libraries
-library("parallel")
-library("foreach")
+library(parallel)
+library(foreach)
 
 # Required source file
 source("simfunc.R")
