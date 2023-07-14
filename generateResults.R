@@ -18,6 +18,8 @@
 rm(list = ls())
 
 # Required libraries
+.libPaths(c("/home/jeysh/R/x86_64-pc-linux-gnu-library/4.3" , "/opt/R/4.3.0/lib/R/library"))
+
 library(parallel)
 library(doSNOW)
 
