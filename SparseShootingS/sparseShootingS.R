@@ -1,5 +1,8 @@
 # Source: https://github.com/ineswilms/sparse-shooting-S
-# Authors: Lea Bottmer, Christophe Croux, Ines Wilms
+# Authors: Lea Bottmer, Christophe Croux, Ines 
+
+# Required library
+library(pcaPP)
 
 # Source CPP code
 Rcpp::sourceCpp("SparseShootingS/sparseShootingS.cpp")
