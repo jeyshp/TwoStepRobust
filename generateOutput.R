@@ -43,14 +43,18 @@ generateOutput <- function (N,
   #Parallel computation of simfunc() for different values of p.active and contamination proportion 
   results <- foreach(mycontprop = contamination.prop, .packages = c("mvnfast",
                                                                     "glmnet",
-                                                                    "pense", "robustHD", "ggplot2", "hqreg",
+                                                                    "pense", "Matrix",
+                                                                    "robustHD", "ggplot2", "perry", "robustbase",
+                                                                    "hqreg",
                                                                     "robStepSplitReg", "srlars",
-                                                                    "robustbase", "pcaPP")) %:%
+                                                                    "pcaPP")) %:%
     foreach(mypactive = p.active, .packages = c("mvnfast",
                                                 "glmnet",
-                                                "pense", "robustHD", "ggplot2", "hqreg",
+                                                "pense", "Matrix",
+                                                "robustHD", "ggplot2", "perry", "robustbase",
+                                                "hqreg",
                                                 "robStepSplitReg", "srlars",
-                                                "robustbase", "pcaPP")) %dopar% {
+                                                "pcaPP")) %dopar% {
                                                   
       output <- simfunc(N = N, n = n, m = m, p = p, rho = rho, rho.inactive = rho.inactive, p.active = mypactive, 
                         group.size = group.size, snr = snr, 
