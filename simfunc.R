@@ -21,7 +21,7 @@ source("generatePred.R")
 simfunc <- function(N, 
                     n, 
                     m, 
-                    parameters, 
+                    p, 
                     rho, 
                     rho.inactive,
                     p.active, 
@@ -32,9 +32,9 @@ simfunc <- function(N,
                     n_models,
                     ...){ 
   
-  sim_Data <- generateData(N, n, m, parameters, rho, rho.inactive, p.active, group.size, snr, 
+  sim_data <- generateData(N, n, m, p, rho, rho.inactive, p.active, group.size, snr, 
                            contamination.prop, contamination.scenario)
-  output <- generatePred(sim_Data, n_models, ...)
+  output <- generatePred(sim_data, n_models, ...)
   
   return(output)
 }

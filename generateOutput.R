@@ -40,28 +40,30 @@ generateOutput <- function (N,
   mycluster <- makeCluster(n_clusters)
   registerDoSNOW(mycluster)
   
-  #Parallel computation of simfunc() for different values of p.active and contamination proportion 
-  results <- foreach(mycontprop = contamination.prop, .packages = c("mvnfast",
-                                                                    "glmnet",
-                                                                    "pense", "Matrix",
-                                                                    "robustHD", "ggplot2", "perry", "robustbase",
-                                                                    "hqreg",
-                                                                    "robStepSplitReg", "srlars",
-                                                                    "pcaPP")) %:%
-    foreach(mypactive = p.active, .packages = c("mvnfast",
-                                                "glmnet",
-                                                "pense", "Matrix",
-                                                "robustHD", "ggplot2", "perry", "robustbase",
-                                                "hqreg",
-                                                "robStepSplitReg", "srlars",
-                                                "pcaPP")) %dopar% {
-                                                  
-      output <- simfunc(N = N, n = n, m = m, p = p, rho = rho, rho.inactive = rho.inactive, p.active = mypactive, 
-                        group.size = group.size, snr = snr, 
-                        contamination.prop = mycontprop, contamination.scenario = contamination.scenario,
-                        n_models = n_models, 
-                        ...)
+  if(contamination.scenario %in% c("casewise", "cellwise_marginal", "cellwise_correlation")){
+    
+    # Parallel computation of simfunc() for different values of p.active and contamination proportion 
+    results <- foreach(mycontprop = contamination.prop) %:%
+      foreach(mypactive = p.active) %dopar% {
+        
+        output <- simfunc(N = N, n = n, m = m, p = p, rho = rho, rho.inactive = rho.inactive, p.active = mypactive, 
+                          group.size = group.size, snr = snr, 
+                          contamination.prop = mycontprop, contamination.scenario = contamination.scenario,
+                          n_models = n_models, 
+                          ...)
       }
+  } else if(contamination.scenario %in% c("mixture_marginal", "mixture_correlation")){
+    
+    # Parallel computation of simfunc() for different values of p.active and contamination proportion 
+    results <- foreach(mypactive = p.active) %dopar% {
+        
+        output <- simfunc(N = N, n = n, m = m, p = p, rho = rho, rho.inactive = rho.inactive, p.active = mypactive, 
+                          group.size = group.size, snr = snr, 
+                          contamination.prop = contamination.prop, contamination.scenario = contamination.scenario,
+                          n_models = n_models, 
+                          ...)
+      }
+  }
   
   stopCluster(mycluster)
   return(results)
