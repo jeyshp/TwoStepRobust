@@ -26,19 +26,39 @@ generatePred <- function(sim_data, n_models, ...) {
   ytestdata <- sim_data$testing_data$ytest
   
   # Initialization of output array
-  pred_output <- array(dim = c(14, 4, N))
-  colnames(pred_output) <- c("MSPE","RC", "PR", "CPU")
-  rownames(pred_output) <- c("ElasticNet", "DDC_ElasticNet", 
-                             "sparseShooting",
-                             "PENSE", "sparseLTS",
-                             "HuberEN",
-                             "robStepSplitReg", "robStepSplitRegSelect", 
-                             "robStepSplitRegEnsemble", "robStepSplitRegEnsembleSelect", 
-                             "srlars", "srlarsSelect",
-                             "srlarsEnsemble", "srlarsEnsembleSelect")
-
+  if(sim_data$contamination.scenario != "casewise"){
+    
+    pred_output <- array(dim = c(11, 4, N))
+    colnames(pred_output) <- c("MSPE","RC", "PR", "CPU")
+    rownames(pred_output) <- c("ElasticNet", "DDC_ElasticNet", 
+                               "sparseShooting",
+                               "robStepSplitReg", "robStepSplitRegSelect", 
+                               "robStepSplitRegEnsemble", "robStepSplitRegEnsembleSelect", 
+                               "srlars", "srlarsSelect",
+                               "srlarsEnsemble", "srlarsEnsembleSelect")
+    
+  } else if(sim_data$contamination.scenario == "casewise"){
+    
+    pred_output <- array(dim = c(14, 4, N))
+    colnames(pred_output) <- c("MSPE","RC", "PR", "CPU")
+    rownames(pred_output) <- c("ElasticNet", "DDC_ElasticNet", 
+                               "sparseShooting",
+                               "PENSE", "sparseLTS",
+                               "HuberEN",
+                               "robStepSplitReg", "robStepSplitRegSelect", 
+                               "robStepSplitRegEnsemble", "robStepSplitRegEnsembleSelect", 
+                               "srlars", "srlarsSelect",
+                               "srlarsEnsemble", "srlarsEnsembleSelect")
+  }
+  
+  # Cluster for PENSE and SparseLTS
+  if(sim_data$contamination.scenario == "casewise")
+    cluster <- makeCluster(5)
   
   for(i in 1:N) {
+    
+    # Print iteration
+    cat("\n", "Iteration: ", i)
     
     # Elastic net
     en_final <- tryCatch({
@@ -60,70 +80,76 @@ generatePred <- function(sim_data, n_models, ...) {
     })
     pred_output["ElasticNet",, i] <- en_final
     
-    # PENSE
-    PENSE_final <- tryCatch({
+    # Casewise contamination methods
+    if(sim_data$contamination.scenario == "casewise"){
       
-      PENSE_cpu <- system.time(
-        PENSE_output <- PENSE::adaPENSE_cv(x = sim_data$training_data$xtrain[[i]],
-                                           y = sim_data$training_data$ytrain[[i]],
-                                           alpha = 0.75, cv_k = 10, cv_repl = 1, cl = NULL,
-                                           eps = 1e0, explore_tol = 1e3,
-                                           enpy_opts = PENSE::enpy_options(retain_max = 50)))
-      MSPE_PENSE <- mean((predict(PENSE_output,xtestdata)- ytestdata)^2)/sim_data$sigma^2
-      coef_PENSE <- coef(PENSE_output)[-1]
-      RC_PENSE <- RC_PR(coef_PENSE, sim_data$active_ind)$rc
-      PR_PENSE <- RC_PR(coef_PENSE, sim_data$active_ind)$pr
-      CPU_PENSE <- PENSE_cpu["elapsed"]
+      # PENSE
+      PENSE_final <- tryCatch({
+        
+        PENSE_cpu <- system.time(
+          PENSE_output <- PENSE::adaPENSE_cv(x = sim_data$training_data$xtrain[[i]],
+                                             y = sim_data$training_data$ytrain[[i]],
+                                             alpha = 0.75, cv_k = 10, cv_repl = 1, cl = cluster,
+                                             eps = 1e0, explore_tol = 1e3,
+                                             enpy_opts = PENSE::enpy_options(retain_max = 50)))
+        MSPE_PENSE <- mean((predict(PENSE_output,xtestdata)- ytestdata)^2)/sim_data$sigma^2
+        coef_PENSE <- coef(PENSE_output)[-1]
+        RC_PENSE <- RC_PR(coef_PENSE, sim_data$active_ind)$rc
+        PR_PENSE <- RC_PR(coef_PENSE, sim_data$active_ind)$pr
+        CPU_PENSE <- PENSE_cpu["elapsed"]
+        
+        c(MSPE_PENSE, RC_PENSE, PR_PENSE, CPU_PENSE)
+      }, error = function(e){
+        return(c(NA, NA, NA, NA))
+      })
+      pred_output["PENSE",, i] <- PENSE_final
       
-      c(MSPE_PENSE, RC_PENSE, PR_PENSE, CPU_PENSE)
-    }, error = function(e){
-      return(c(NA, NA, NA, NA))
-    })
-    pred_output["PENSE",, i] <- PENSE_final
-    
-    # Huber-EN
-    huber_final <- tryCatch({
+      # Huber-EN
+      huber_final <- tryCatch({
+        
+        huber_cpu <- system.time(
+          huber_output <- hqreg::cv.hqreg(sim_data$training_data$xtrain[[i]],
+                                          sim_data$training_data$ytrain[[i]],
+                                          alpha = 0.75, method = "huber"))
+        MPSE_huber <- mean((predict(huber_output,xtestdata)- ytestdata)^2)/sim_data$sigma^2
+        coef_huber <- coef(huber_output)[-1]
+        RC_huber <- RC_PR(coef_huber, sim_data$active_ind)$rc
+        PR_huber <- RC_PR(coef_huber, sim_data$active_ind)$pr
+        CPU_huber  <- huber_cpu["elapsed"]
+        
+        c(MPSE_huber, RC_huber, PR_huber, CPU_huber)
+        
+      }, error = function(e){
+        return(c(NA, NA, NA, NA))
+      })
+      pred_output["HuberEN",, i] <- huber_final
       
-      huber_cpu <- system.time(
-        huber_output <- hqreg::cv.hqreg(sim_data$training_data$xtrain[[i]],
-                                        sim_data$training_data$ytrain[[i]],
-                                        alpha = 0.75, method = "huber"))
-      MPSE_huber <- mean((predict(huber_output,xtestdata)- ytestdata)^2)/sim_data$sigma^2
-      coef_huber <- coef(huber_output)[-1]
-      RC_huber <- RC_PR(coef_huber, sim_data$active_ind)$rc
-      PR_huber <- RC_PR(coef_huber, sim_data$active_ind)$pr
-      CPU_huber  <- huber_cpu["elapsed"]
-      
-      c(MPSE_huber, RC_huber, PR_huber, CPU_huber)
-      
-    }, error = function(e){
-      return(c(NA, NA, NA, NA))
-    })
-    pred_output["HuberEN",, i] <- huber_final
-    
-    # sparse LTS
-    sparseLTS_final <- tryCatch({
-      
-      lambda_max <- robustHD::lambda0(sim_data$training_data$xtrain[[i]], sim_data$training_data$ytrain[[i]])
-      lambda_grid = rev(exp(seq(log(1e-2*lambda_max), log(lambda_max), length = 50)))
-      sparseLTS_cpu <- system.time(
-        sparseLTS_output <- robustHD::sparseLTS(x = sim_data$training_data$xtrain[[i]], 
-                                                y = c(sim_data$training_data$ytrain[[i]]), 
-                                                lambda = lambda_grid,
-                                                mode = "lambda",
-                                                tol = 1e-2))
-      MSPE_sparseLTS <- mean((predict(sparseLTS_output, xtestdata) - ytestdata)^2)/sim_data$sigma^2
-      coef_sparseLTS <- coef(sparseLTS_output)[-1]
-      RC_sparseLTS <- RC_PR(coef_sparseLTS, sim_data$active_ind)$rc
-      PR_sparseLTS <- RC_PR(coef_sparseLTS, sim_data$active_ind)$pr
-      CPU_sparseLTS <- sparseLTS_cpu["elapsed"]
-      
-      c(MSPE_sparseLTS, RC_sparseLTS, PR_sparseLTS, CPU_sparseLTS)
-      
-    }, error = function(e){
-      return(c(NA, NA, NA, NA))
-    }) 
-    pred_output["sparseLTS",, i] <- sparseLTS_final
+      # Sparse LTS
+      sparseLTS_final <- tryCatch({
+        
+        lambda_max <- robustHD::lambda0(sim_data$training_data$xtrain[[i]], sim_data$training_data$ytrain[[i]])
+        lambda_grid = rev(exp(seq(log(1e-2*lambda_max), log(lambda_max), length = 50)))
+        sparseLTS_cpu <- system.time(
+          sparseLTS_output <- robustHD::sparseLTS(x = sim_data$training_data$xtrain[[i]], 
+                                                  y = c(sim_data$training_data$ytrain[[i]]), 
+                                                  lambda = lambda_grid,
+                                                  mode = "lambda",
+                                                  tol = 1e-2,
+                                                  cluster = cluster,
+                                                  ncores = 5))
+        MSPE_sparseLTS <- mean((predict(sparseLTS_output, xtestdata) - ytestdata)^2)/sim_data$sigma^2
+        coef_sparseLTS <- coef(sparseLTS_output)[-1]
+        RC_sparseLTS <- RC_PR(coef_sparseLTS, sim_data$active_ind)$rc
+        PR_sparseLTS <- RC_PR(coef_sparseLTS, sim_data$active_ind)$pr
+        CPU_sparseLTS <- sparseLTS_cpu["elapsed"]
+        
+        c(MSPE_sparseLTS, RC_sparseLTS, PR_sparseLTS, CPU_sparseLTS)
+        
+      }, error = function(e){
+        return(c(NA, NA, NA, NA))
+      }) 
+      pred_output["sparseLTS",, i] <- sparseLTS_final
+    }
     
     # DDC Elastic Net
     DDC_ElasticNet_final <- tryCatch({
@@ -157,7 +183,7 @@ generatePred <- function(sim_data, n_models, ...) {
         sparseS_output <- sparseshooting(x = sim_data$training_data$xtrain[[i]], 
                                          y = sim_data$training_data$ytrain[[i]],  
                                          wvalue = 3, nlambda = 100))
-      sparseS_preds <- sparseS_output$coef[1] + xtestdata %*% sparseS_output$coef[-1]
+      sparseS_preds <- (sparseS_output$coef[1] + xtestdata %*% sparseS_output$coef[-1]) 
       MSPE_sparseS <- mean((sparseS_preds -ytestdata)^2)/sim_data$sigma^2
       coef_sparseS <- sparseS_output$coef[-1]
       RC_sparseS <- RC_PR(coef_sparseS, sim_data$active_ind)$rc
@@ -287,8 +313,7 @@ generatePred <- function(sim_data, n_models, ...) {
         return(c(NA, NA, NA, NA))
     })
     pred_output["srlarsSelect",, i] <- srlarsSelect_final
-  
-    
+
     # Split Robust LARS Ensemble
     srlarsEnsemble_final <- tryCatch({
         
@@ -301,7 +326,7 @@ generatePred <- function(sim_data, n_models, ...) {
                                                 robust = TRUE,
                                                 compute_coef = TRUE,
                                                 en_alpha = 1/4))
-      MSPE_srlarsEnsemble<- mean((predict(srlars_outputEnsemble,newx = xtestdata)- ytestdata)^2)/sim_data$sigma^2
+      MSPE_srlarsEnsemble<- mean((predict(srlars_outputEnsemble,newx = xtestdata) - ytestdata)^2)/sim_data$sigma^2
       coef_srlarsEnsemble <- coef(srlars_outputEnsemble)[-1]
       RC_srlarsEnsemble <- RC_PR(coef_srlarsEnsemble, sim_data$active_ind)$rc
       PR_srlarsEnsemble <- RC_PR(coef_srlarsEnsemble, sim_data$active_ind)$pr
@@ -328,6 +353,9 @@ generatePred <- function(sim_data, n_models, ...) {
     })
     pred_output["srlarsEnsembleSelect",, i] <- srlarsEnsembleSelect_final
   }
+  
+  if(sim_data$contamination.scenario == "casewise")
+    stopCluster(cluster)
   
   # Return full prediction output
   return (pred_output)

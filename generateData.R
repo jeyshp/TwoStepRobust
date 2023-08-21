@@ -86,14 +86,15 @@ generateData <- function(N,
       # Cellwise Marginal Contamination 
       for(i in 1:N) {
         
-        contamination_indices <- sample(1:(n * p), round(n * p * contamination.prop))
-        x_train <-  xlist[[i]]
-        x_train[contamination_indices] <- NA
+        contamination_indices <- sample(1:(n * (p + 1)), round(n * (p + 1) * contamination.prop))
+        xy_train <-  cbind(xlist[[i]], ylist[[i]])
+        xy_train[contamination_indices] <- NA
         for(row_id in 1:n){
-          cells_id <- which(is.na(x_train[row_id,]))
-          x_train[row_id, cells_id] <- rnorm(length(cells_id), cell_mean, 1)
+          cells_id <- which(is.na(xy_train[row_id,]))
+          xy_train[row_id, cells_id] <- rnorm(length(cells_id), cell.mean, 1)
         }
-        xlist[[i]] <- x_train
+        xlist[[i]] <- xy_train[, -(p + 1)]
+        ylist[[i]] <- xy_train[, (p + 1)]
       }
       
     } else if(contamination.scenario == "cellwise_correlation") {
@@ -133,15 +134,16 @@ generateData <- function(N,
         }
       
         # Cellwise Marginal Contamination 
-        contamination_indices <- sample(1:((n - n.casewise) * p), 
-                                        round((n - n.casewise) * p * contamination.prop[2]))
-        x_train <-  xlist[[i]]
-        x_train[(n.casewise + 1):n,][contamination_indices] <- NA
+        contamination_indices <- sample(1:((n - n.casewise) * (p + 1)), 
+                                        round((n - n.casewise) * (p + 1) * contamination.prop[2]))
+        xy_train <-  cbind(xlist[[i]], ylist[[i]])
+        xy_train[(n.casewise + 1):n,][contamination_indices] <- NA
         for(row_id in (n.casewise + 1):n){
-          cells_id <- which(is.na(x_train[row_id,]))
-          x_train[row_id, cells_id] <- rnorm(length(cells_id), cell.mean, 1)
+          cells_id <- which(is.na(xy_train[row_id,]))
+          xy_train[row_id, cells_id] <- rnorm(length(cells_id), cell.mean, 1)
         }
-        xlist[[i]] <- x_train
+        xlist[[i]] <- xy_train[, -(p + 1)]
+        ylist[[i]] <- xy_train[, (p + 1)]
       }
     } else if(contamination.scenario == "mixture_correlation"){
       
@@ -183,7 +185,8 @@ generateData <- function(N,
   
  return(
    list(training_data = list(xtrain = xlist, ytrain = ylist), testing_data = list(xtest = x_test, ytest = y_test), 
-        pactive = p.active, n = n, sigma = sigma, active_ind = which(trueBeta != 0), p = p, trueBeta = trueBeta))
+        pactive = p.active, n = n, sigma = sigma, active_ind = which(trueBeta != 0), p = p, trueBeta = trueBeta,
+        contamination.scenario = contamination.scenario))
   
 }
 

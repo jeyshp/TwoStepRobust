@@ -33,39 +33,53 @@ generateOutput <- function (N,
   # Setting seed
   set.seed(seed)
   
-  # Initializing number of cores used 
-  if (length(p.active)*length(contamination.prop) != 1) 
-    n_clusters <-  min(length(p.active)*length(contamination.prop), detectCores()-1) else
-      n_clusters <- 2
-  mycluster <- makeCluster(n_clusters)
-  registerDoSNOW(mycluster)
-  
-  if(contamination.scenario %in% c("casewise", "cellwise_marginal", "cellwise_correlation")){
+  if(contamination.scenario %in% c("cellwise_marginal", "cellwise_correlation", "casewise")){
     
-    # Parallel computation of simfunc() for different values of p.active and contamination proportion 
-    results <- foreach(mycontprop = contamination.prop) %:%
-      foreach(mypactive = p.active) %dopar% {
+    # Creating list for output
+    output <- lapply(1:length(contamination.prop), function(t1) return(lapply(1:length(p.active), function(t2) return(list()))))
+    
+    # Computation of simfunc() for different values of p.active and contamination proportion 
+    for(contamination.id in 1:length(contamination.prop)){
+      for(active.id in 1:length(p.active)) {
         
-        output <- simfunc(N = N, n = n, m = m, p = p, rho = rho, rho.inactive = rho.inactive, p.active = mypactive, 
-                          group.size = group.size, snr = snr, 
-                          contamination.prop = mycontprop, contamination.scenario = contamination.scenario,
-                          n_models = n_models, 
-                          ...)
+        # Print p.active and sparsity
+        cat("\n", "tau: ", contamination.prop[contamination.id])
+        cat("\n", "p.active: ", p.active[active.id], "\n")
+        
+        output[[contamination.id]][[active.id]] <- simfunc(N = N, n = n, m = m, p = p, 
+                                                           rho = rho, rho.inactive = rho.inactive, 
+                                                           p.active = p.active[active.id], 
+                                                           group.size = group.size, snr = snr, 
+                                                           contamination.prop = contamination.prop[contamination.id], 
+                                                           contamination.scenario = contamination.scenario,
+                                                           n_models = n_models, 
+                                                           ...)
       }
+    }
+    
   } else if(contamination.scenario %in% c("mixture_marginal", "mixture_correlation")){
     
-    # Parallel computation of simfunc() for different values of p.active and contamination proportion 
-    results <- foreach(mypactive = p.active) %dopar% {
-        
-        output <- simfunc(N = N, n = n, m = m, p = p, rho = rho, rho.inactive = rho.inactive, p.active = mypactive, 
-                          group.size = group.size, snr = snr, 
-                          contamination.prop = contamination.prop, contamination.scenario = contamination.scenario,
-                          n_models = n_models, 
-                          ...)
+    # Creating list for output
+    output <- lapply(1:length(p.active), function(t1) return(list()))
+    
+    # Computation of simfunc() for different values of p.active and contamination proportion 
+    for(active.id in 1:length(p.active)) {
+      
+      # Print p.active
+      cat("\n", "p.active: ", p.active[active.id], "\n")
+      
+      output[[active.id]] <- simfunc(N = N, n = n, m = m, p = p, 
+                                     rho = rho, rho.inactive = rho.inactive, 
+                                     p.active = p.active[active.id], 
+                                     group.size = group.size, snr = snr, 
+                                     contamination.prop = contamination.prop, 
+                                     contamination.scenario = contamination.scenario,
+                                     n_models = n_models, 
+                                     ...)
       }
   }
   
-  stopCluster(mycluster)
-  return(results)
+  # Returning the list of outputs
+  return(output)
 }
 
